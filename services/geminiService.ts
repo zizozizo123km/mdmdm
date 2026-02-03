@@ -9,34 +9,36 @@ export const generateAppCode = async (prompt: string): Promise<GeneratedApp> => 
     model: "gemini-3-pro-preview",
     contents: prompt,
     config: {
-      systemInstruction: `You are a world-class Software Architect and Senior Frontend Engineer specialized in Vercel deployments. 
-      Your task is to generate a complete, production-ready React application that is fully optimized for Vercel.
+      systemInstruction: `You are a world-class Full-Stack Web Architect specialized in modern HTML5/JavaScript and Vercel-ready backends.
+      Your task is to generate a complete, production-ready Full-Stack application.
       
       Requirements:
-      1. Use React (TypeScript), Tailwind CSS, and Lucide React icons.
-      2. Provide a modular structure (components, hooks, utils, types).
-      3. The 'App.tsx' should be the main entry point.
-      4. MANDATORY: Include a 'package.json' with proper scripts for Vercel (build, start, dev).
-      5. MANDATORY: Include a 'vercel.json' configuration file for routing and environment settings.
-      6. Include a 'README.md' file explaining the architecture and how to deploy to Vercel with one click.
-      7. Use modern React patterns (hooks, functional components).
+      1. Frontend: Use standard HTML5, CSS3 (can use Tailwind CDN), and modern ES6+ JavaScript.
+      2. Backend: Provide Node.js serverless functions (standard Vercel style in the 'api/' directory).
+      3. Structure: 
+         - 'public/' or root for HTML/CSS/JS.
+         - 'api/' for Backend logic (Serverless functions).
+      4. MANDATORY: Include 'package.json' and 'vercel.json' to glue the frontend and backend together.
+      5. Functionality: Ensure the frontend actually communicates with the generated backend endpoints.
+      6. Security: Implement basic security headers and best practices.
+      7. Documentation: A comprehensive 'README.md' explaining how the full-stack architecture works.
       
-      Output ONLY a JSON object matching the requested schema. Ensure the files are structured correctly for a standard Vercel project deployment.`,
+      Output ONLY a JSON object matching the requested schema. Provide a robust, interconnected full-stack experience.`,
       thinkingConfig: { thinkingBudget: 30000 },
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Professional name of the generated app" },
-          description: { type: Type.STRING, description: "A technical overview focusing on features and Vercel compatibility" },
+          name: { type: Type.STRING, description: "Professional name of the full-stack app" },
+          description: { type: Type.STRING, description: "Detailed technical summary of frontend and backend integration" },
           files: {
             type: Type.ARRAY,
             items: {
               type: Type.OBJECT,
               properties: {
-                path: { type: Type.STRING, description: "Detailed file path (e.g., src/components/Header.tsx, vercel.json, package.json)" },
-                content: { type: Type.STRING, description: "The complete source code of the file" },
-                language: { type: Type.STRING, description: "Programming language for highlighting (typescript, tsx, css, json, markdown)" }
+                path: { type: Type.STRING, description: "Detailed file path (e.g., index.html, api/hello.js, package.json)" },
+                content: { type: Type.STRING, description: "The complete source code" },
+                language: { type: Type.STRING, description: "Programming language (html, javascript, css, json, markdown)" }
               },
               required: ["path", "content", "language"]
             }
@@ -54,6 +56,6 @@ export const generateAppCode = async (prompt: string): Promise<GeneratedApp> => 
     return JSON.parse(text.trim()) as GeneratedApp;
   } catch (error) {
     console.error("Failed to parse JSON response:", text);
-    throw new Error("The AI returned invalid JSON. Please refine your prompt and try again.");
+    throw new Error("The AI failed to generate valid JSON. Try refining your full-stack requirements.");
   }
 };
