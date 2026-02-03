@@ -8,6 +8,7 @@ export interface GeneratedFile {
 export interface GeneratedApp {
   name: string;
   description: string;
+  tree: string; // تمثيل نصي لهيكل الملفات
   files: GeneratedFile[];
 }
 

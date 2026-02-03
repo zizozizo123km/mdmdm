@@ -1,61 +1,78 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
 import { GeneratedApp } from "../types";
 
 export const generateAppCode = async (prompt: string): Promise<GeneratedApp> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Use the API key provided in the environment
+  const apiKey = process.env.API_KEY;
   
-  const response = await ai.models.generateContent({
-    model: "gemini-3-pro-preview",
-    contents: prompt,
-    config: {
-      systemInstruction: `You are a world-class Full-Stack Web Architect specialized in modern HTML5/JavaScript and Vercel-ready backends.
-      Your task is to generate a complete, production-ready Full-Stack application.
-      
-      Requirements:
-      1. Frontend: Use standard HTML5, CSS3 (can use Tailwind CDN), and modern ES6+ JavaScript.
-      2. Backend: Provide Node.js serverless functions (standard Vercel style in the 'api/' directory).
-      3. Structure: 
-         - 'public/' or root for HTML/CSS/JS.
-         - 'api/' for Backend logic (Serverless functions).
-      4. MANDATORY: Include 'package.json' and 'vercel.json' to glue the frontend and backend together.
-      5. Functionality: Ensure the frontend actually communicates with the generated backend endpoints.
-      6. Security: Implement basic security headers and best practices.
-      7. Documentation: A comprehensive 'README.md' explaining how the full-stack architecture works.
-      
-      Output ONLY a JSON object matching the requested schema. Provide a robust, interconnected full-stack experience.`,
-      thinkingConfig: { thinkingBudget: 30000 },
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING, description: "Professional name of the full-stack app" },
-          description: { type: Type.STRING, description: "Detailed technical summary of frontend and backend integration" },
-          files: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                path: { type: Type.STRING, description: "Detailed file path (e.g., index.html, api/hello.js, package.json)" },
-                content: { type: Type.STRING, description: "The complete source code" },
-                language: { type: Type.STRING, description: "Programming language (html, javascript, css, json, markdown)" }
-              },
-              required: ["path", "content", "language"]
-            }
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": window.location.origin,
+      "X-Title": "AppForge Architect",
+    },
+    body: JSON.stringify({
+      "model": "tngtech/deepseek-r1t2-chimera:free",
+      "messages": [
+        {
+          "role": "system",
+          "content": `You are a world-class Full-Stack Project Architect. 
+          Your goal is to generate a complete, working web application.
+          
+          OUTPUT FORMAT:
+          You must return ONLY a raw JSON object. Do not include markdown formatting like \`\`\`json. 
+          The JSON must exactly match this structure:
+          {
+            "name": "App Name",
+            "description": "App Description",
+            "tree": "Visual ASCII file tree",
+            "files": [
+              { "path": "index.html", "content": "...", "language": "html" },
+              { "path": "api/server.js", "content": "...", "language": "javascript" },
+              { "path": "package.json", "content": "...", "language": "json" },
+              { "path": "vercel.json", "content": "...", "language": "json" }
+            ]
           }
+
+          ARCHITECTURE RULES:
+          1. Frontend must be in the root (index.html, styles.css, etc.).
+          2. Backend logic must be in the 'api/' directory for Vercel Serverless compatibility.
+          3. Frontend MUST fetch from '/api/filename' to interact with the backend.
+          4. Include all necessary config files (package.json, vercel.json).
+          5. Ensure the code is production-ready and fully functional.`
         },
-        required: ["name", "description", "files"]
-      }
-    }
+        {
+          "role": "user",
+          "content": prompt
+        }
+      ],
+      "response_format": { "type": "json_object" }
+    })
   });
 
-  const text = response.text;
-  if (!text) throw new Error("No response from Gemini");
-  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || "Failed to communicate with the DeepSeek reasoning engine.");
+  }
+
+  const data = await response.json();
+  let content = data.choices[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("Reasoning engine returned an empty response.");
+  }
+
+  // DeepSeek models sometimes include <thought> tags or markdown backticks.
+  // We clean the content before parsing to ensure valid JSON.
+  content = content.replace(/<thought>[\s\S]*?<\/thought>/g, '');
+  content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+
   try {
-    return JSON.parse(text.trim()) as GeneratedApp;
+    return JSON.parse(content) as GeneratedApp;
   } catch (error) {
-    console.error("Failed to parse JSON response:", text);
-    throw new Error("The AI failed to generate valid JSON. Try refining your full-stack requirements.");
+    console.error("JSON Parsing failed for content:", content);
+    throw new Error("The reasoning engine returned an invalid format. Please refine your request.");
   }
 };

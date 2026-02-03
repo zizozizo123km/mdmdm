@@ -1,5 +1,5 @@
 {
-  "name": "Gemini CodeForge",
-  "description": "An AI-powered React component and application generator that uses Gemini 3 Pro to create production-ready code snippets and UI structures.",
+  "name": "AppForge Architect",
+  "description": "A full-stack application architect powered by DeepSeek via OpenRouter. Generates production-ready frontend and backend structures using reasoning models.",
   "requestFramePermissions": []
 }
