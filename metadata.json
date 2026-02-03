@@ -1,0 +1,5 @@
+{
+  "name": "Gemini CodeForge",
+  "description": "An AI-powered React component and application generator that uses Gemini 3 Pro to create production-ready code snippets and UI structures.",
+  "requestFramePermissions": []
+}
